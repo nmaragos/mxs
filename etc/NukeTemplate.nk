@@ -1,0 +1,82 @@
+#! C:/Program Files/Nuke9.0v6/nuke-9.0.6.dll -nx
+#write_info Write1 file:"[argv 1]" format:"1024 768 1" chans:":rgba.red:rgba.green:rgba.blue:" framerange:"1 1000" fps:"0" colorspace:"default (Gamma2.2)" datatype:"unknown" transfer:"unknown" views:"main"
+version 9.0 v6
+define_window_layout_xml {<?xml version="1.0" encoding="UTF-8"?>
+<layout version="1.0">
+    <window x="0" y="0" w="1920" h="1160" screen="0">
+        <splitter orientation="1">
+            <split size="40"/>
+            <dock id="" hideTitles="1" activePageId="Toolbar.1">
+                <page id="Toolbar.1"/>
+            </dock>
+            <split size="1241" stretch="1"/>
+            <splitter orientation="2">
+                <split size="642"/>
+                <dock id="" activePageId="Viewer.1">
+                    <page id="Viewer.1"/>
+                </dock>
+                <split size="452"/>
+                <dock id="" activePageId="DAG.1">
+                    <page id="DAG.1"/>
+                    <page id="Curve Editor.1"/>
+                    <page id="DopeSheet.1"/>
+                </dock>
+            </splitter>
+            <split size="615"/>
+            <dock id="" activePageId="Properties.1" focus="true">
+                <page id="Properties.1"/>
+            </dock>
+        </splitter>
+    </window>
+</layout>
+}
+Root {
+ inputs 0
+ name Z:/dev/etc/NukeTemplate.nk
+ last_frame 1000
+ lock_range true
+ format "2048 1556 0 0 2048 1556 1 2K_Super_35(full-ap)"
+ proxy_type scale
+ proxy_format "1024 778 0 0 1024 778 1 1K_Super_35(full-ap)"
+}
+Viewer {
+ inputs 0
+ frame_range 1-1000
+ name Viewer1
+ xpos -38
+ ypos 60
+}
+Read {
+ inputs 0
+ file "\[argv 0]"
+ format "1024 768 0 0 1024 768 1 "
+ first 0
+ last 300
+ origfirst 0
+ origlast 300
+ origset true
+ name Read1
+ xpos -38
+ ypos -172
+}
+Write {
+ file "\[argv 1]"
+ file_type mov
+ meta_codec avc1
+ meta_encoder mov32
+ mov32_codec avc1
+ mov32_pixel_format {{0} "default (YCbCr  8-bit 422 (2vuy))" "RGBA  8-bit" "YCbCr  8-bit 422 (2vuy)"}
+ mov64_codec ap4h
+ mov64_bitrate 20000
+ mov64_bitrate_tolerance 40000000
+ mov64_quality_min 2
+ mov64_quality_max 31
+ mov64_gop_size 12
+ mov64_b_frames 0
+ checkHashOnRead false
+ version 1
+ name Write1
+ selected true
+ xpos -38
+ ypos -45
+}

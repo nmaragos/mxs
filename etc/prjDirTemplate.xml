@@ -1,0 +1,18 @@
+<root>
+	<folder name="io">
+		<folder name="incoming"/>
+		<folder name="outgoing"/>
+	</folder>
+	<folder name="assets">
+	</folder>
+	<folder name="shots">
+	</folder>
+	<folder name="maps">
+		<folder name="textures"/>
+		<folder name="HDRI"/>
+	</folder>
+	<folder name="production">
+		<folder name="docs"/>
+		<folder name="reviews"/>
+	</folder>
+</root>
