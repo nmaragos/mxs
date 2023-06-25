@@ -1,6 +1,6 @@
 /*
 	------------------------------------------
-	Script	:	SnapLoad - v1.6 (Macro)
+	Script	:	SnapLoad - v1.7 (Macro)
 	Date	:	Nov 2017
 	------------------------------------------
 	Notes	:	- Load previous take
@@ -13,6 +13,9 @@
 					- Discipline abbreviation conversion in filename
 			v1.6:	- Moved GetProjects and GetSubDirs functions to startUpLib
 			v1.6.1:	- Bugfix: Properly browse through projects dirs, when new file
+			v1.7:	- Opening a scene will create a local copy to work from
+					- Option load either "version" or "take"
+					- Code cleanup and optimisation
 	
 */
 
@@ -21,30 +24,9 @@
 global _snapLoad
 global prjDirList = getdirectories (prjDir + "*")
 global takeDir
+global loadScene
 global noteFile = ""
 global noteFileContent = ""
-
--- fn GetProjects =
--- (
--- 	global projects = #()
--- 	for i in prjDirList do
--- 	(
--- 		local tmpPrj = substring i (prjDir.count + 1) ((i.count - 1) - prjDir.count)
--- 		append projects tmpPrj
--- 	)
--- )
-
--- fn GetSubDirs _root =
--- (
--- 	global subList = #()
--- 	subDir  = getdirectories (_root + @"\*")
--- 	
--- 	for i in subDir do
--- 	(
--- 		listItem = filterstring i @"\"
--- 		append subList listItem[listItem.count]	
--- 	)
--- )
 
 fn VersionList _dir =
 (
@@ -89,12 +71,10 @@ fn populateEmpty _case =
 	global noteFileContent = ""
 )
 
--- fn maxfileTake = (trimright noteFile "txt") + "max"
-
--- fn maxfileVer = 
--- (
--- 	
--- )
+fn SceneFilename =
+(
+	return projectCode + "_" + _snapLoad._shot.selected + "_" + GetDisCode(_snapLoad._dis.selected) + "_" + _snapLoad._elm.selected + "_" + _snapLoad._ver.selected + ".max"
+)
 
 fn PopulateLists _prjSl _shotSl _disSl _elmSl _verSl _takeSl = 
 (
@@ -119,7 +99,7 @@ fn PopulateLists _prjSl _shotSl _disSl _elmSl _verSl _takeSl =
 		else
 		(
 			global popElmList = subList
-			global verDir = popPrjSel + @"shots\" + popShotList[_shotSl] + @"\" + popDisList[_disSl] + @"\" + popElmList[_elmSl]
+			global verDir = popPrjSel + @"shots\" + popShotList[_shotSl] + @"\" + popDisList[_disSl] + @"\" + popElmList[_elmSl] + @"\"
 			VersionList (verDir)
 			global popVerList = sort verList
 
@@ -139,10 +119,8 @@ fn PopulateLists _prjSl _shotSl _disSl _elmSl _verSl _takeSl =
 			)
 			else
 			(
--- 				local noteFilename = (filterstring noteFile @"\")[(filterstring noteFile @"\").count]
 				local maxfileTake = (FilterString noteFile ".")[1] + ".max"
 				noteFileContent = "Take file created on:\r\n" + getFileCreateDate maxfileTake
--- 				noteFileContent = "Take file created on:\r\n" + getFileCreateDate (takeDir + projects[4] + "_" + popShotList[1] + "_" + popDisList[1] + "_" + popElmList[1] + "_" + popVerList[1] + "_" + popTakeList[1] + ".max")
 			)
 		)
 	)
@@ -152,44 +130,36 @@ RCmenu snapMenu
 (
 	subMenu "File"
 	(
-		menuItem m1_1 "Load Take"
-		menuItem m1_2 "Load Version"
+		menuItem m1_1 "Open Take Dir"
+		menuItem m1_2 "Open Version Dir"
 		separator sep1
 		menuItem m1_3 "Exit"
 	)
 	
-	subMenu "Extra"
+/*	subMenu "Extra"
 	(
 		menuItem m2_1 "Archive..."
-	)
+	) */
 	
 	on m1_1 picked do
 	(
-		if noteFile != "" then
-		(
-			local maxFileTake = (FilterString noteFile ".")[1] + ".max"
-			if CheckForSave() then 
-				if loadMaxFile maxFileTake then
-					DestroyDialog _snapLoad
-		)
+		if _snapLoad._take.selected != "<000>" then
+			showDir takeDir
+		else
+			messageBox("Not valid Take selected")
 	)
 	
 	on m1_2 picked do 
 	(
 		if _snapLoad._ver.selected != "<000>" then
-		(
--- 			local sceneDir = prjDir + _snapLoad._prj.selected + @"\shots\" + _snapLoad._shot.selected + @"\" + _snapLoad._dis.selected + @"\" + _snapLoad._elm.selected + @"\"
-			local maxFileVer = verDir + @"\" + projectCode + "_" + _snapLoad._shot.selected + "_" + GetDisCode(_snapLoad._dis.selected) + "_" + _snapLoad._elm.selected + "_" + _snapLoad._ver.selected + ".max"
-			if CheckForSave() then 
-				if loadMaxFile maxFileVer then
-					DestroyDialog _snapLoad
-		)
+			showDir verDir
+		else messageBox("Not valid Version selected")
 	)
 	
 	on m1_3 picked do (destroyDialog _snapLoad)
 )
 
-rollout _snapLoad "Load Take" width:700 height:170
+rollout _snapLoad "Load Scene File" width:700 height:170
 (
 	dropdownList _prj "Projects" pos:[12,6] width:114 height:40 items:projects across:5	
 	bitmap _bmp "Bitmap" pos:[13,46] width:112 height:112 filename:popBitmap
@@ -221,15 +191,10 @@ rollout _snapLoad "Load Take" width:700 height:170
 		PopulateLists _prj.selection 1 1 1 1 1
 		_bmp.filename = popBitmap
 		_shot.items = popShotList
---		_shot.selection = 1
 		_dis.items = popDisList
---		_dis.selection = 1
 		_elm.items = popElmList
---		_elm.selection = 1
 		_ver.items = popVerList
---		_ver.selection = 1
 		_take.items = popTakeList
---		_take.selection = 1
 		_notes.text = noteFileContent
 	)
 	
@@ -237,13 +202,9 @@ rollout _snapLoad "Load Take" width:700 height:170
 	(
 		PopulateLists _prj.selection _shot.selection 1 1 1 1
 		_dis.items = popDisList
---		_dis.selection = 1
 		_elm.items = popElmList
---		_elm.selection = 1
 		_ver.items = popVerList
---		_ver.selection = 1
 		_take.items = popTakeList
---		_take.selection = 1
 		_notes.text = noteFileContent
 	)
 	
@@ -251,11 +212,8 @@ rollout _snapLoad "Load Take" width:700 height:170
 	(
 		PopulateLists _prj.selection _shot.selection _dis.selection 1 1 1
 		_elm.items = popElmList
---		_elm.selection = 1
 		_ver.items = popVerList
---		_ver.selection = 1
 		_take.items = popTakeList
---		_take.selection = 1
 		_notes.text = noteFileContent
 	)
 	
@@ -263,9 +221,7 @@ rollout _snapLoad "Load Take" width:700 height:170
 	(
 		PopulateLists _prj.selection _shot.selection _dis.selection _elm.selection 1 1
 		_ver.items = popVerList
---		_ver.selection = 1
 		_take.items = popTakeList
---		_take.selection = 1
 		_notes.text = noteFileContent
 	)
 	
@@ -273,14 +229,10 @@ rollout _snapLoad "Load Take" width:700 height:170
 	(
 		PopulateLists _prj.selection _shot.selection _dis.selection _elm.selection _ver.selection 1
 		_take.items = popTakeList
---		_take.selection = 1
 		if _ver.selected != "<000>" then
 		(
--- 			local sceneDir = prjDir + _prj.selected + @"\shots\" + _shot.selected + @"\" + _dis.selected + @"\" + _elm.selected + @"\"
--- 			local maxFileVer = _prj.selected + "_" + _shot.selected + "_" + _dis.selected + "_" + _elm.selected + "_" + _ver.selected + ".max"
--- 			_notes.text = "Version last modified on:\r\n" + getFileModDate (sceneDir + maxFileVer)
-			local maxFileVer = verDir + @"\" + projectCode + "_" + _shot.selected + "_" + GetDisCode(_dis.selected) + "_" + _elm.selected + "_" + _ver.selected + ".max"
-			_notes.text = "Version last modified on:\r\n" + getFileModDate maxFileVer
+			local sceneFilePath = verDir + @"\" + projectCode + "_" + _shot.selected + "_" + GetDisCode(_dis.selected) + "_" + _elm.selected + "_" + _ver.selected + ".max"
+			_notes.text = "Version last modified on:\r\n" + getFileModDate sceneFilePath
 		)
 	)
 	
@@ -295,31 +247,58 @@ rollout _snapLoad "Load Take" width:700 height:170
 	
 	on _ver doubleclicked _itm do
 	(
--- 		verDir =	prjDir + _prj.selected + @"\shots\" + _shot.selected + @"\" + _dis.selected + @"\" + _elm.selected + @"\" 	-- + _ver.selected + @"\"
-		if _ver.selected != "<000>" then
-			showDir verDir
+		print("loading version...")
+		loadScene("version")
 	)
 	
 	on _take doubleclicked _itm do
 	(
-		--takeDir =	rendDir + _prj.selected + @"\" + _shot.selected + @"\" + _dis.selected + @"\" + _elm.selected + @"\" + _ver.selected + @"\"
-		if _take.selected != "<000>" then
-			showDir takeDir
+		loadScene("take")
 	)
 	
-	on _btnOpen pressed do	--TODO:Better implementation. Load either version or take. Move the process in separate function that can be used by the menu items as well.
+	on _btnOpen pressed do
 	(
-		if noteFile != "" then
-		(
-			maxFile = (FilterString noteFile ".")[1] + ".max"
-			if CheckForSave() then 
-				if loadMaxFile maxFile then
-					prjLib()
-					DestroyDialog _snapLoad
-		)
+		loadScene("take")
+	)
+	
+	on _btnCancel pressed do
+	(
+		DestroyDialog _snapLoad
 	)
 )
 
+
+fn loadScene sceneType = 
+(
+	dis_idx = findItem disGrp _snapLoad._dis.selected
+	sceneName = _snapLoad._prj.selected + "_" + _snapLoad._shot.selected + "_" + disCode[dis_idx] + "_" + _snapLoad._elm.selected + "_" + _snapLoad._ver.selected
+	scenePath = verDir + sceneName
+	
+	scenePartDir = _snapLoad._prj.selected + @"\" + _snapLoad._shot.selected + @"\" + disCode[dis_idx] + @"\" + _snapLoad._elm.selected + @"\" + _snapLoad._ver.selected + @"\"
+	
+	if sceneType == "take" then
+	(
+		sceneName += "_" + _snapLoad._take.selected
+		scenePath = takeDir + sceneName
+		scenePartDir += _snapLoad._take.selected + @"\"
+	)
+	
+	scenePath += ".max"
+	localSceneDir = workDir + scenePartDir
+	localScenePath = localSceneDir + sceneName + ".max"
+	print scenePath
+	
+	if CheckForSave() then
+	(
+		makeDir localSceneDir
+		copyFile scenePath localScenePath
+		if loadMaxFile localScenePath then
+		(
+			prjLib()
+			DestroyDialog _snapLoad
+		)
+	)
+)
 
 fn loadSnapshot =
 (
@@ -334,6 +313,5 @@ fn loadSnapshot =
 		CreateDialog _snapLoad menu:snapMenu
 	)
 )
-
 
 )
