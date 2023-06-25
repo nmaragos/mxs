@@ -28,28 +28,6 @@ global loadScene
 global noteFile = ""
 global noteFileContent = ""
 
--- fn GetProjects =
--- (
--- 	global projects = #()
--- 	for i in prjDirList do
--- 	(
--- 		local tmpPrj = substring i (prjDir.count + 1) ((i.count - 1) - prjDir.count)
--- 		append projects tmpPrj
--- 	)
--- )
-
--- fn GetSubDirs _root =
--- (
--- 	global subList = #()
--- 	subDir  = getdirectories (_root + @"\*")
--- 	
--- 	for i in subDir do
--- 	(
--- 		listItem = filterstring i @"\"
--- 		append subList listItem[listItem.count]	
--- 	)
--- )
-
 fn VersionList _dir =
 (
 	global verList = #()
@@ -92,8 +70,6 @@ fn populateEmpty _case =
 	global popTakeList = #("<000>")
 	global noteFileContent = ""
 )
-
--- fn maxfileTake = (trimright noteFile "txt") + "max"
 
 fn SceneFilename =
 (
@@ -143,10 +119,8 @@ fn PopulateLists _prjSl _shotSl _disSl _elmSl _verSl _takeSl =
 			)
 			else
 			(
--- 				local noteFilename = (filterstring noteFile @"\")[(filterstring noteFile @"\").count]
 				local maxfileTake = (FilterString noteFile ".")[1] + ".max"
 				noteFileContent = "Take file created on:\r\n" + getFileCreateDate maxfileTake
--- 				noteFileContent = "Take file created on:\r\n" + getFileCreateDate (takeDir + projects[4] + "_" + popShotList[1] + "_" + popDisList[1] + "_" + popElmList[1] + "_" + popVerList[1] + "_" + popTakeList[1] + ".max")
 			)
 		)
 	)
@@ -217,15 +191,10 @@ rollout _snapLoad "Load Scene File" width:700 height:170
 		PopulateLists _prj.selection 1 1 1 1 1
 		_bmp.filename = popBitmap
 		_shot.items = popShotList
---		_shot.selection = 1
 		_dis.items = popDisList
---		_dis.selection = 1
 		_elm.items = popElmList
---		_elm.selection = 1
 		_ver.items = popVerList
---		_ver.selection = 1
 		_take.items = popTakeList
---		_take.selection = 1
 		_notes.text = noteFileContent
 	)
 	
@@ -233,13 +202,9 @@ rollout _snapLoad "Load Scene File" width:700 height:170
 	(
 		PopulateLists _prj.selection _shot.selection 1 1 1 1
 		_dis.items = popDisList
---		_dis.selection = 1
 		_elm.items = popElmList
---		_elm.selection = 1
 		_ver.items = popVerList
---		_ver.selection = 1
 		_take.items = popTakeList
---		_take.selection = 1
 		_notes.text = noteFileContent
 	)
 	
@@ -247,11 +212,8 @@ rollout _snapLoad "Load Scene File" width:700 height:170
 	(
 		PopulateLists _prj.selection _shot.selection _dis.selection 1 1 1
 		_elm.items = popElmList
---		_elm.selection = 1
 		_ver.items = popVerList
---		_ver.selection = 1
 		_take.items = popTakeList
---		_take.selection = 1
 		_notes.text = noteFileContent
 	)
 	
@@ -259,9 +221,7 @@ rollout _snapLoad "Load Scene File" width:700 height:170
 	(
 		PopulateLists _prj.selection _shot.selection _dis.selection _elm.selection 1 1
 		_ver.items = popVerList
---		_ver.selection = 1
 		_take.items = popTakeList
---		_take.selection = 1
 		_notes.text = noteFileContent
 	)
 	
@@ -269,12 +229,8 @@ rollout _snapLoad "Load Scene File" width:700 height:170
 	(
 		PopulateLists _prj.selection _shot.selection _dis.selection _elm.selection _ver.selection 1
 		_take.items = popTakeList
---		_take.selection = 1
 		if _ver.selected != "<000>" then
 		(
--- 			local sceneDir = prjDir + _prj.selected + @"\shots\" + _shot.selected + @"\" + _dis.selected + @"\" + _elm.selected + @"\"
--- 			local sceneFilePath = _prj.selected + "_" + _shot.selected + "_" + _dis.selected + "_" + _elm.selected + "_" + _ver.selected + ".max"
--- 			_notes.text = "Version last modified on:\r\n" + getFileModDate (sceneDir + sceneFilePath)
 			local sceneFilePath = verDir + @"\" + projectCode + "_" + _shot.selected + "_" + GetDisCode(_dis.selected) + "_" + _elm.selected + "_" + _ver.selected + ".max"
 			_notes.text = "Version last modified on:\r\n" + getFileModDate sceneFilePath
 		)
@@ -300,7 +256,7 @@ rollout _snapLoad "Load Scene File" width:700 height:170
 		loadScene("take")
 	)
 	
-	on _btnOpen pressed do	--TODO:Better implementation. Load either version or take. Move the process in separate function that can be used by the menu items as well.
+	on _btnOpen pressed do
 	(
 		loadScene("take")
 	)
@@ -357,6 +313,5 @@ fn loadSnapshot =
 		CreateDialog _snapLoad menu:snapMenu
 	)
 )
-
 
 )
