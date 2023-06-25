@@ -32,23 +32,25 @@ global fend = animationrange.end as integer / ticksperframe
 DateTime()
 
 -- omit the extension .max from filename
-global mfn = substring maxfilename 1 (maxfilename.count - 4)
+-- global mfn = substring maxfilename 1 (maxfilename.count - 4)
+global mfn = (filterString maxfilename ".")[1]
 
 -- filename collector : array of the various chunks of file name divided by _
 global fnc = filterstring mfn "_"
 
 -- define the project name
-tempPrj = substring maxfilepath (prjDir.count + 1) (maxfilepath.count - (prjDir.count +1))
+/*tempPrj = substring maxfilepath (prjDir.count + 1) (maxfilepath.count - (prjDir.count +1))
 prjFilter = filterstring tempPrj @"\"
-global curPrj = prjFilter[1]
+global curPrj = prjFilter[1] */
+global curPrj = fnc[1]
 
 -- useful filename chunks
-global prjCode = fnc[1]												-- project code 	eg. AA
-global shotNum = fnc[2] + "_" + fnc[3]							-- shot number	eg. 001_001 (seq#_shot#)
+global prjCode = fnc[1]										-- project code 	eg. AA
+global shotNum = fnc[2] + "_" + fnc[3]						-- shot number		eg. 001_001 (seq#_shot#)
 global shotCode = prjCode + "_" + shotNum					-- shot code		eg. AA_001_001
-global dis = fnc[4]														-- discipline		eg. fx
-global elm = fnc[5]														-- element			eg. fireball
-global ver = fnc[6]														-- version			eg. v001
+global dis = fnc[4]											-- discipline		eg. fx
+global elm = fnc[5]											-- element			eg. fireball
+global ver = fnc[6]											-- version			eg. v001
 if ValidName() == "ValidTake" then global curTake = fnc[7]
 
 -- define current project dir
